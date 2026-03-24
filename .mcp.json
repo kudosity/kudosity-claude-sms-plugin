@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "kudosity": {
+      "type": "http",
+      "url": "https://developers.kudosity.com/mcp"
+    }
+  }
+}
