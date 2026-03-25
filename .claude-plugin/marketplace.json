@@ -1,8 +1,13 @@
 {
+  "name": "kudosity-claude-sms-plugin",
+  "owner": {
+    "name": "Kudosity",
+    "url": "https://kudosity.com"
+  },
   "plugins": [
     {
       "name": "kudosity-sms",
-      "path": "."
+      "source": "."
     }
   ]
 }
