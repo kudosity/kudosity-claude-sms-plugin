@@ -93,7 +93,7 @@ V2 API (SMS, MMS, webhooks):        Connected
 Account Balance: {balance} {currency}
 
 You can now use:
-- /kudosity:create-list  — Create contact lists and add recipients
-- /kudosity:send-sms     — Send SMS to individuals or lists
-- /kudosity:send-mms     — Send multimedia messages
-- /kudosity:setup-webhook — Configure delivery notifications
+- /kudosity-sms:create-list  — Create contact lists and add recipients
+- /kudosity-sms:send-sms     — Send SMS to individuals or lists
+- /kudosity-sms:send-mms     — Send multimedia messages
+- /kudosity-sms:setup-webhook — Configure delivery notifications

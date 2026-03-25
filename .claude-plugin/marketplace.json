@@ -1,7 +1,7 @@
 {
   "plugins": [
     {
-      "name": "kudosity",
+      "name": "kudosity-sms",
       "path": "."
     }
   ]

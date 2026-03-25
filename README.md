@@ -1,4 +1,4 @@
-# Kudosity Claude Code Plugin
+# Kudosity SMS Plugin for Claude Code
 
 Send SMS, MMS, manage contact lists, and configure webhooks using the [Kudosity](https://kudosity.com) messaging platform — directly from Claude Code.
 
@@ -6,12 +6,12 @@ Send SMS, MMS, manage contact lists, and configure webhooks using the [Kudosity]
 
 | Skill | Description |
 |-------|-------------|
-| `/kudosity:create-list` | Create contact lists and add recipients (V1 API) |
-| `/kudosity:send-sms` | Send SMS to individuals or contact lists (V1 + V2 API) |
-| `/kudosity:send-mms` | Send multimedia messages with images, GIFs, video, or audio (V2 API) |
-| `/kudosity:setup-webhook` | Configure delivery status notifications, inbound messages, and more (V2 API) |
+| `/kudosity-sms:create-list` | Create contact lists and add recipients (V1 API) |
+| `/kudosity-sms:send-sms` | Send SMS to individuals or contact lists (V1 + V2 API) |
+| `/kudosity-sms:send-mms` | Send multimedia messages with images, GIFs, video, or audio (V2 API) |
+| `/kudosity-sms:setup-webhook` | Configure delivery status notifications, inbound messages, and more (V2 API) |
 
-The plugin also includes a `/kudosity:setup` command to walk you through credential configuration and verification.
+The plugin also includes a `/kudosity-sms:setup` command to walk you through credential configuration and verification.
 
 ## Prerequisites
 
@@ -24,15 +24,15 @@ The plugin also includes a `/kudosity:setup` command to walk you through credent
 ### From the Kudosity marketplace
 
 ```bash
-/plugin marketplace add burstsms/kudosity-claude-code-plugin
-/plugin install kudosity@kudosity-claude-code-plugin
+/plugin marketplace add kudosity/kudosity-claude-sms-plugin
+/plugin install kudosity-sms@kudosity-claude-sms-plugin
 ```
 
 ### For local development
 
 ```bash
-git clone https://github.com/burstsms/kudosity-claude-code-plugin.git
-claude --plugin-dir ./kudosity-claude-code-plugin
+git clone https://github.com/kudosity/kudosity-claude-sms-plugin.git
+claude --plugin-dir ./kudosity-claude-sms-plugin
 ```
 
 ## Setup
@@ -58,7 +58,7 @@ source ~/.zshrc
 Run the setup command in Claude Code:
 
 ```
-/kudosity:setup
+/kudosity-sms:setup
 ```
 
 This will verify both your V1 and V2 API credentials and show your account balance.
