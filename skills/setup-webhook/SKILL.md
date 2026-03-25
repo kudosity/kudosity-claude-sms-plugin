@@ -9,14 +9,14 @@ Webhooks allow users to receive HTTP POST notifications when events occur, such 
 
 ## Authentication
 
-- Header: `x-api-key: {KUDOSITY_V2_API_KEY}`
-- If the user hasn't configured credentials, direct them to run `/kudosity:setup`
+- Header: `x-api-key: {KUDOSITY_API_KEY}`
+- If the user hasn't configured credentials, direct them to run `/kudosity-sms:setup`
 
 ## API Details
 
 - **Base URL**: `https://api.transmitmessage.com`
 - **Content-Type**: `application/json`
-- Use the MCP `execute-request` tool with title `Transmit Message API`
+- All requests use `curl` commands
 
 ## Create a Webhook
 
@@ -53,44 +53,37 @@ Optional parameters:
 
 ### Example: Create a webhook for SMS delivery status and inbound messages
 
-```json
-{
-  "method": "POST",
-  "url": "https://api.transmitmessage.com/v2/webhook",
-  "headers": [
-    {"name": "x-api-key", "value": "{KUDOSITY_V2_API_KEY}"},
-    {"name": "Content-Type", "value": "application/json"}
-  ],
-  "postData": {
-    "mimeType": "application/json",
-    "text": "{\"name\": \"SMS Events\", \"url\": \"https://myapp.com/webhooks/sms\", \"filter\": {\"event_type\": [\"SMS_STATUS\", \"SMS_INBOUND\"]}}"
-  }
-}
+```bash
+curl -s -X POST "https://api.transmitmessage.com/v2/webhook" \
+  -H "x-api-key: ${KUDOSITY_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "SMS Events",
+    "url": "https://myapp.com/webhooks/sms",
+    "filter": {"event_type": ["SMS_STATUS", "SMS_INBOUND"]}
+  }'
 ```
 
 ### Example: Create a webhook filtered to specific statuses
 
-```json
-{
-  "postData": {
-    "mimeType": "application/json",
-    "text": "{\"name\": \"Failed SMS Alerts\", \"url\": \"https://myapp.com/webhooks/failures\", \"filter\": {\"event_type\": [\"SMS_STATUS\"], \"status\": [\"FAILED\", \"HARD_BOUNCE\"]}}"
-  }
-}
+```bash
+curl -s -X POST "https://api.transmitmessage.com/v2/webhook" \
+  -H "x-api-key: ${KUDOSITY_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Failed SMS Alerts",
+    "url": "https://myapp.com/webhooks/failures",
+    "filter": {"event_type": ["SMS_STATUS"], "status": ["FAILED", "HARD_BOUNCE"]}
+  }'
 ```
 
 ## List All Webhooks
 
 **Endpoint**: `GET /v2/webhook`
 
-```json
-{
-  "method": "GET",
-  "url": "https://api.transmitmessage.com/v2/webhook",
-  "headers": [
-    {"name": "x-api-key", "value": "{KUDOSITY_V2_API_KEY}"}
-  ]
-}
+```bash
+curl -s "https://api.transmitmessage.com/v2/webhook" \
+  -H "x-api-key: ${KUDOSITY_API_KEY}"
 ```
 
 ## Webhook Payload Examples

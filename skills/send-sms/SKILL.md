@@ -12,19 +12,19 @@ Kudosity supports two ways to send SMS depending on the use case:
 ## Authentication
 
 **V2 API** (single recipient):
-- Header: `x-api-key: {KUDOSITY_V2_API_KEY}`
+- Header: `x-api-key: {KUDOSITY_API_KEY}`
 
 **V1 API** (list-based or multi-recipient):
 - Header: `Authorization: Basic {base64(KUDOSITY_API_KEY:KUDOSITY_API_SECRET)}`
 
-If the user hasn't configured credentials, direct them to run `/kudosity:setup`.
+If the user hasn't configured credentials, direct them to run `/kudosity-sms:setup`.
 
 ## Option A: Send to a Single Recipient (V2 API)
 
 **Endpoint**: `POST https://api.transmitmessage.com/v2/sms`
 **Content-Type**: `application/json`
 
-Use the MCP `execute-request` tool with title `Transmit Message API`.
+All API calls use `curl` commands.
 
 Required parameters:
 - `message` (string): The SMS body text
@@ -35,28 +35,18 @@ Optional parameters:
 - `message_ref` (string, max 500 chars): Your reference ID, returned in webhooks
 - `track_links` (boolean): Enable link tracking with shortened URLs
 
-Example HAR request:
-```json
-{
-  "method": "POST",
-  "url": "https://api.transmitmessage.com/v2/sms",
-  "headers": [
-    {"name": "x-api-key", "value": "{KUDOSITY_V2_API_KEY}"},
-    {"name": "Content-Type", "value": "application/json"}
-  ],
-  "postData": {
-    "mimeType": "application/json",
-    "text": "{\"message\": \"Your order has shipped!\", \"sender\": \"61481074185\", \"recipient\": \"61491570156\"}"
-  }
-}
+Example curl command:
+```bash
+curl -s -X POST "https://api.transmitmessage.com/v2/sms" \
+  -H "x-api-key: ${KUDOSITY_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Your order has shipped!", "sender": "61481074185", "recipient": "61491570156"}'
 ```
 
 ## Option B: Send to a List or Multiple Numbers (V1 API)
 
 **Endpoint**: `POST https://api.transmitsms.com/send-sms.json`
 **Content-Type**: `application/x-www-form-urlencoded`
-
-Use the MCP `execute-request` tool with title `Transmit SMS API`.
 
 Required parameters:
 - `message` (string): The SMS body (up to 612 alphanumeric characters)
@@ -74,20 +64,11 @@ Optional parameters:
 - `tracked_link_url` (URL): URL to convert to a tracked shortened link (use `[tracked-link]` in message)
 - `replies_to_email` (email): Forward replies to this email address
 
-Example HAR request (list-based):
-```json
-{
-  "method": "POST",
-  "url": "https://api.transmitsms.com/send-sms.json",
-  "headers": [
-    {"name": "Authorization", "value": "Basic {base64(KUDOSITY_API_KEY:KUDOSITY_API_SECRET)}"},
-    {"name": "Content-Type", "value": "application/x-www-form-urlencoded"}
-  ],
-  "postData": {
-    "mimeType": "application/x-www-form-urlencoded",
-    "text": "message=Sale starts tomorrow!&list_id=4213644&from=61481074185"
-  }
-}
+Example curl command (list-based):
+```bash
+curl -s -X POST "https://api.transmitsms.com/send-sms.json" \
+  -u "${KUDOSITY_API_KEY}:${KUDOSITY_API_SECRET}" \
+  -d "message=Sale starts tomorrow!&list_id=4213644&from=61481074185"
 ```
 
 ## Choosing Between V1 and V2

@@ -5,59 +5,74 @@ description: Configure your Kudosity API credentials and verify they work correc
 
 # Kudosity Setup
 
-Help the user configure their Kudosity API credentials step by step.
+Walk the user through configuring their Kudosity API credentials interactively. The goal is to collect their credentials, save them to their shell profile, and verify they work — all without the user needing to manually edit files.
 
 ## Step 1: Check Prerequisites
 
 Ask the user if they have a Kudosity account. If not, direct them to:
-- Sign up at **https://kudosity.com**
-- Once signed in, go to **Settings → API Settings** to find their API credentials
+- Sign up for your free account at **https://kudosity.com/signup**
+- Once signed in, go to **Developers → API Settings** to find their API credentials
 
-## Step 2: Identify Required Credentials
-
-The user needs three values from their Kudosity account:
+Show this table so they know what to look for:
 
 | Credential | Where to Find | Environment Variable |
 |-----------|--------------|---------------------|
-| V1 API Key | Settings → API Settings → API Key | `KUDOSITY_API_KEY` |
-| V1 API Secret | Settings → API Settings → API Secret | `KUDOSITY_API_SECRET` |
-| V2 API Key | Settings → API Settings → API Key | `KUDOSITY_V2_API_KEY` |
+| API Key | Developers → API Settings → API Key | `KUDOSITY_API_KEY` |
+| API Secret | Developers → API Settings → API Secret | `KUDOSITY_API_SECRET` |
 
-## Step 3: Guide Environment Variable Setup
+Explain how the credentials are used:
+- **V1 API** (contacts, lists, bulk SMS): Uses Basic Auth with base64-encoded `API_KEY:API_SECRET`
+- **V2 API** (single SMS, MMS, webhooks): Uses `x-api-key` header with just the API Key
 
-Provide the user with the shell commands to set their environment variables. For **zsh** (macOS default):
+## Step 2: Collect Credentials Interactively
+
+Before asking for credentials, display this security notice:
+
+> 🔒 **Your credentials are stored securely.** They will be saved as environment variables in your local shell profile (`~/.zshrc`) — they are never sent to Claude or stored in the cloud. They are only used locally on your machine when making API requests to Kudosity.
+
+Ask the user for each value one at a time:
+
+1. "What is your **API Key**?" (from Developers → API Settings → API Key)
+2. "What is your **API Secret**?" (from Developers → API Settings → API Secret)
+
+Store the values they provide for use in the next steps.
+
+## Step 3: Auto-Save to Shell Profile
+
+Detect the user's shell and determine the profile file:
+- If `$SHELL` contains `zsh` → use `~/.zshrc`
+- If `$SHELL` contains `bash` → use `~/.bashrc`
+- Otherwise default to `~/.zshrc`
+
+For each credential, check if it already exists in the profile file:
+- If the line `export KUDOSITY_API_KEY=` already exists, **replace** the entire line using `sed`
+- If it doesn't exist, **append** it
+
+Execute these commands (replacing `{value}` with the actual user-provided values):
 
 ```bash
-echo 'export KUDOSITY_API_KEY="your_v1_api_key_here"' >> ~/.zshrc
-echo 'export KUDOSITY_API_SECRET="your_v1_api_secret_here"' >> ~/.zshrc
-echo 'export KUDOSITY_V2_API_KEY="your_v2_api_key_here"' >> ~/.zshrc
+# For each variable, check and update or append
+grep -q 'export KUDOSITY_API_KEY=' ~/.zshrc && \
+  sed -i '' 's|^export KUDOSITY_API_KEY=.*|export KUDOSITY_API_KEY="{value}"|' ~/.zshrc || \
+  echo 'export KUDOSITY_API_KEY="{value}"' >> ~/.zshrc
+
+grep -q 'export KUDOSITY_API_SECRET=' ~/.zshrc && \
+  sed -i '' 's|^export KUDOSITY_API_SECRET=.*|export KUDOSITY_API_SECRET="{value}"|' ~/.zshrc || \
+  echo 'export KUDOSITY_API_SECRET="{value}"' >> ~/.zshrc
+
 source ~/.zshrc
 ```
 
-For **bash**:
-
-```bash
-echo 'export KUDOSITY_API_KEY="your_v1_api_key_here"' >> ~/.bashrc
-echo 'export KUDOSITY_API_SECRET="your_v1_api_secret_here"' >> ~/.bashrc
-echo 'export KUDOSITY_V2_API_KEY="your_v2_api_key_here"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-Remind the user to replace the placeholder values with their actual credentials.
+After executing, confirm to the user that credentials have been saved to their shell profile.
 
 ## Step 4: Verify V1 Credentials
 
-After the user has set their environment variables, verify them by calling the V1 get-balance endpoint:
+Verify the V1 credentials by calling the get-balance endpoint.
 
-Use the MCP `execute-request` tool with title `Transmit SMS API`:
-```json
-{
-  "method": "GET",
-  "url": "https://api.transmitsms.com/get-balance.json",
-  "headers": [
-    {"name": "Authorization", "value": "Basic {base64(KUDOSITY_API_KEY:KUDOSITY_API_SECRET)}"}
-  ]
-}
+Execute this curl command:
+```bash
+curl -s "https://api.transmitsms.com/get-balance.json" \
+  -u "${KUDOSITY_API_KEY}:${KUDOSITY_API_SECRET}"
 ```
 
 If successful, show the user their account balance and currency.
@@ -65,21 +80,17 @@ If it fails, check the error and help them troubleshoot (wrong credentials, acco
 
 ## Step 5: Verify V2 Credentials
 
-Verify the V2 API key by listing SMS messages:
+Verify the V2 API access by listing SMS messages. The V2 API uses the same API Key (not the secret).
 
-Use the MCP `execute-request` tool with title `Transmit Message API`:
-```json
-{
-  "method": "GET",
-  "url": "https://api.transmitmessage.com/v2/sms",
-  "headers": [
-    {"name": "x-api-key", "value": "{KUDOSITY_V2_API_KEY}"}
-  ]
-}
+Execute this curl command:
+
+```bash
+curl -s -w "\n%{http_code}" "https://api.transmitmessage.com/v2/sms?limit=1" \
+  -H "x-api-key: ${KUDOSITY_API_KEY}"
 ```
 
-If successful, confirm to the user that their V2 credentials are working.
-If it fails, help them troubleshoot.
+If the HTTP status code is 200, confirm to the user that their V2 credentials are working.
+If it returns 401 or 403, the API key is incorrect — help them troubleshoot.
 
 ## Step 6: Summary
 
@@ -92,8 +103,10 @@ V1 API (contacts, lists, bulk SMS): Connected
 V2 API (SMS, MMS, webhooks):        Connected
 Account Balance: {balance} {currency}
 
+Credentials saved to: ~/.zshrc
+
 You can now use:
-- /kudosity-sms:create-list  — Create contact lists and add recipients
-- /kudosity-sms:send-sms     — Send SMS to individuals or lists
-- /kudosity-sms:send-mms     — Send multimedia messages
-- /kudosity-sms:setup-webhook — Configure delivery notifications
+- /kudosity-sms:create-list      — Create contact lists and add recipients
+- /kudosity-sms:send-sms         — Send SMS to individuals or lists
+- /kudosity-sms:send-mms         — Send multimedia messages
+- /kudosity-sms:setup-webhook    — Configure delivery notifications

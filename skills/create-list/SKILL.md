@@ -13,13 +13,13 @@ All list operations use **V1 Basic Auth**:
 - Header: `Authorization: Basic {credentials}`
 - Credentials: base64 encode `{KUDOSITY_API_KEY}:{KUDOSITY_API_SECRET}`
 - The user must have `KUDOSITY_API_KEY` and `KUDOSITY_API_SECRET` environment variables set
-- If the user hasn't configured credentials, direct them to run `/kudosity:setup`
+- If the user hasn't configured credentials, direct them to run `/kudosity-sms:setup`
 
 ## API Details
 
 - **Base URL**: `https://api.transmitsms.com`
 - **Content-Type**: `application/x-www-form-urlencoded`
-- Use the MCP `execute-request` tool with title `Transmit SMS API` for all requests
+- All requests use `curl` commands with Basic Auth
 
 ## Step 1: Create a List
 
@@ -31,20 +31,11 @@ Required parameters:
 Optional parameters:
 - `field_1` through `field_10`: Custom field names (firstname and lastname are created by default)
 
-Example HAR request:
-```json
-{
-  "method": "POST",
-  "url": "https://api.transmitsms.com/add-list.json",
-  "headers": [
-    {"name": "Authorization", "value": "Basic {base64(KUDOSITY_API_KEY:KUDOSITY_API_SECRET)}"},
-    {"name": "Content-Type", "value": "application/x-www-form-urlencoded"}
-  ],
-  "postData": {
-    "mimeType": "application/x-www-form-urlencoded",
-    "text": "name=My Campaign List&field_1=email&field_2=postcode"
-  }
-}
+Example curl command:
+```bash
+curl -s -X POST "https://api.transmitsms.com/add-list.json" \
+  -u "${KUDOSITY_API_KEY}:${KUDOSITY_API_SECRET}" \
+  -d "name=My Campaign List&field_1=email&field_2=postcode"
 ```
 
 The response returns the list `id` — store this for adding contacts.
@@ -63,20 +54,11 @@ Optional parameters:
 - `last_name` (string): Contact's last name
 - `field_1` through `field_10`: Values for custom fields defined on the list
 
-Example HAR request:
-```json
-{
-  "method": "POST",
-  "url": "https://api.transmitsms.com/add-to-list.json",
-  "headers": [
-    {"name": "Authorization", "value": "Basic {base64(KUDOSITY_API_KEY:KUDOSITY_API_SECRET)}"},
-    {"name": "Content-Type", "value": "application/x-www-form-urlencoded"}
-  ],
-  "postData": {
-    "mimeType": "application/x-www-form-urlencoded",
-    "text": "list_id=4213644&msisdn=0491570156&countrycode=AU&first_name=John&last_name=Doe&field_1=john@example.com"
-  }
-}
+Example curl command:
+```bash
+curl -s -X POST "https://api.transmitsms.com/add-to-list.json" \
+  -u "${KUDOSITY_API_KEY}:${KUDOSITY_API_SECRET}" \
+  -d "list_id=4213644&msisdn=0491570156&countrycode=AU&first_name=John&last_name=Doe&field_1=john@example.com"
 ```
 
 ## Important Notes

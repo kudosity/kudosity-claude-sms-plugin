@@ -4,8 +4,8 @@ Send SMS, MMS, manage contact lists, and configure webhooks using the [Kudosity]
 
 ## Features
 
-| Skill | Description |
-|-------|-------------|
+| Command | Description |
+|---------|-------------|
 | `/kudosity-sms:create-list` | Create contact lists and add recipients (V1 API) |
 | `/kudosity-sms:send-sms` | Send SMS to individuals or contact lists (V1 + V2 API) |
 | `/kudosity-sms:send-mms` | Send multimedia messages with images, GIFs, video, or audio (V2 API) |
@@ -15,25 +15,36 @@ The plugin also includes a `/kudosity-sms:setup` command to walk you through cre
 
 ## Prerequisites
 
-1. **Kudosity account** — Sign up at [kudosity.com](https://kudosity.com)
-2. **API credentials** — Found in your account under **Settings → API Settings**
+1. **Kudosity account** — [Sign up for your free account](https://kudosity.com/signup)
+2. **API credentials** — Found in your account under **Developers → API Settings**
 3. **Claude Code v1.0.33+** — Run `claude --version` to check
 
 ## Installation
 
-### From the Kudosity marketplace
+### From the official Anthropic marketplace
 
-```bash
+If approved on the official marketplace:
+```
+/plugin install kudosity-sms@claude-plugins-official
+```
+
+### From the Kudosity marketplace (GitHub)
+
+Add the Kudosity plugin marketplace and install:
+```
 /plugin marketplace add kudosity/kudosity-claude-sms-plugin
-/plugin install kudosity-sms@kudosity-claude-sms-plugin
+/plugin install kudosity-sms@kudosity-kudosity-claude-sms-plugin
 ```
 
 ### For local development
 
 ```bash
 git clone https://github.com/kudosity/kudosity-claude-sms-plugin.git
-claude --plugin-dir ./kudosity-claude-sms-plugin
+cd kudosity-claude-sms-plugin
+claude
 ```
+
+Claude Code will automatically detect the plugin files (`.mcp.json`, skills, commands, and agents) from the current directory.
 
 ## Setup
 
@@ -42,9 +53,8 @@ claude --plugin-dir ./kudosity-claude-sms-plugin
 Add these to your shell profile (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
-export KUDOSITY_API_KEY="your_v1_api_key"
-export KUDOSITY_API_SECRET="your_v1_api_secret"
-export KUDOSITY_V2_API_KEY="your_v2_api_key"
+export KUDOSITY_API_KEY="your_api_key"
+export KUDOSITY_API_SECRET="your_api_secret"
 ```
 
 Then reload your shell:
@@ -94,14 +104,21 @@ This will verify both your V1 and V2 API credentials and show your account balan
 | Send MMS | V2 | x-api-key |
 | Create/manage webhooks | V2 | x-api-key |
 
+The full API specifications are available as OpenAPI documents:
+- **V1**: [`api_documentation.yml`](https://developers.kudosity.com/openapi/api_documentation.yml) — Lists, contacts, bulk SMS
+- **V2**: [`public-openapi.yaml`](https://developers.kudosity.com/openapi/public-openapi.yaml) — Single SMS, MMS, webhooks
+
 ## Architecture
 
-This plugin connects to the public Kudosity MCP server at `developers.kudosity.com/mcp`. No authentication is needed for the MCP connection itself — credentials are only required when executing API requests.
+This plugin connects to the public Kudosity MCP server at [`developers.kudosity.com/mcp`](https://developers.kudosity.com/mcp) for API documentation lookup. All API requests are made directly via `curl` using your locally stored credentials.
 
 The MCP provides:
-- **Documentation tools** (`list-specs`, `list-endpoints`, `get-endpoint`, `search-endpoints`) — no auth needed
-- **Routing helper** (`route-kudosity-operations`) — no auth needed
-- **API execution** (`execute-request`) — requires your API credentials in the request headers
+- **Documentation tools** (`list-specs`, `list-endpoints`, `get-endpoint`, `search-endpoints`) — browse and search API endpoints
+- **Routing helper** (`route-kudosity-operations`) — determines which API version to use
+
+API calls are made directly via `curl`:
+- **V1 API** (`api.transmitsms.com`) — Basic Auth with `-u` flag
+- **V2 API** (`api.transmitmessage.com`) — `x-api-key` header
 
 ## Plugin Structure
 
@@ -122,9 +139,12 @@ The MCP provides:
 └── README.md
 ```
 
-## Support
+## Support & Resources
 
 - **API Documentation**: [developers.kudosity.com](https://developers.kudosity.com)
+- **MCP Server**: [developers.kudosity.com/mcp](https://developers.kudosity.com/mcp)
+- **V1 API Spec (OpenAPI)**: [api_documentation.yml](https://developers.kudosity.com/openapi/api_documentation.yml)
+- **V2 API Spec (OpenAPI)**: [public-openapi.yaml](https://developers.kudosity.com/openapi/public-openapi.yaml)
 - **Kudosity Support**: [kudosity.com](https://kudosity.com)
 
 ## License
