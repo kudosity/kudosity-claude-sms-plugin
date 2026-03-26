@@ -1,7 +1,8 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "kudosity-claude-sms-plugin",
-  "description": "Kudosity SMS & MMS messaging plugin for Claude Code",
+  "metadata": {
+    "description": "Kudosity SMS & MMS messaging plugin for Claude Code"
+  },
   "owner": {
     "name": "Kudosity",
     "email": "support@kudosity.com"
@@ -11,8 +12,8 @@
       "name": "kudosity-sms",
       "description": "Send SMS and MMS messages, manage contact lists, and configure webhooks using the Kudosity messaging platform.",
       "source": {
-        "source": "url",
-        "url": "https://github.com/kudosity/kudosity-claude-sms-plugin.git"
+        "source": "github",
+        "repo": "kudosity/kudosity-claude-sms-plugin"
       },
       "homepage": "https://developers.kudosity.com"
     }

@@ -28,12 +28,23 @@ Explain how the credentials are used:
 
 Before asking for credentials, display this security notice:
 
-> 🔒 **Your credentials are stored securely.** They will be saved as environment variables in your local shell profile (`~/.zshrc`) — they are never sent to Claude or stored in the cloud. They are only used locally on your machine when making API requests to Kudosity.
+> 🔒 **Your credentials are stored locally as environment variables** in your shell profile (`~/.zshrc`). They are not sent to Claude, the MCP server, or any cloud service — they are used only on your machine when making direct API requests to Kudosity. If you are on a shared machine, be aware that other users with access to your shell config file may be able to read these values.
 
 Ask the user for each value one at a time:
 
 1. "What is your **API Key**?" (from Developers → API Settings → API Key)
 2. "What is your **API Secret**?" (from Developers → API Settings → API Secret)
+
+### Validation — Do Not Allow Blank Values
+
+After each credential is provided, check that it is **not blank, empty, or whitespace-only**. If the user provides a blank value:
+
+- **Do NOT proceed** to the next step.
+- Display this message:
+
+> ⚠️ **This field cannot be blank.** You must set your API Secret in your Kudosity dashboard at **Developers → API Settings** before you can complete setup. If you haven't created one yet, log in to your account and generate it there first.
+
+- Re-prompt the user for the missing credential. Do not continue until a non-empty value is provided for both the API Key and API Secret.
 
 Store the values they provide for use in the next steps.
 
@@ -110,3 +121,4 @@ You can now use:
 - /kudosity-sms:send-sms         — Send SMS to individuals or lists
 - /kudosity-sms:send-mms         — Send multimedia messages
 - /kudosity-sms:setup-webhook    — Configure delivery notifications
+```

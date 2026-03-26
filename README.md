@@ -2,16 +2,24 @@
 
 Send SMS, MMS, manage contact lists, and configure webhooks using the [Kudosity](https://kudosity.com) messaging platform — directly from Claude Code.
 
+## Overview
+
+This plugin integrates Claude Code with the Kudosity messaging APIs, enabling you to send SMS and MMS messages, create and manage contact lists, and configure webhooks through natural language commands.
+
+All API operations are executed **locally on your machine** by Claude Code using `curl` with your own API credentials. The plugin connects to a remote MCP server for API documentation lookup only — no message data or credentials are sent through it.
+
 ## Features
 
-| Command | Description |
-|---------|-------------|
-| `/kudosity-sms:create-list` | Create contact lists and add recipients (V1 API) |
+| Skill | Description |
+|-------|-------------|
 | `/kudosity-sms:send-sms` | Send SMS to individuals or contact lists (V1 + V2 API) |
 | `/kudosity-sms:send-mms` | Send multimedia messages with images, GIFs, video, or audio (V2 API) |
+| `/kudosity-sms:create-list` | Create contact lists and add recipients (V1 API) |
 | `/kudosity-sms:setup-webhook` | Configure delivery status notifications, inbound messages, and more (V2 API) |
 
-The plugin also includes a `/kudosity-sms:setup` command to walk you through credential configuration and verification.
+The plugin also includes:
+- `/kudosity-sms:setup` — interactive credential configuration and verification command
+- `kudosity-assistant` — a specialized agent for coordinating multi-step messaging operations
 
 ## Prerequisites
 
@@ -24,6 +32,7 @@ The plugin also includes a `/kudosity-sms:setup` command to walk you through cre
 ### From the official Anthropic marketplace
 
 If approved on the official marketplace:
+
 ```
 /plugin install kudosity-sms@claude-plugins-official
 ```
@@ -31,10 +40,14 @@ If approved on the official marketplace:
 ### From the Kudosity marketplace (GitHub)
 
 Add the Kudosity plugin marketplace and install:
+
 ```
-/plugin marketplace add kudosity/kudosity-claude-sms-plugin
-/plugin install kudosity-sms@kudosity-kudosity-claude-sms-plugin
+/plugin marketplace add https://github.com/kudosity/kudosity-claude-sms-plugin
+/reload-plugins
+/plugin install kudosity-sms
 ```
+
+> **Note:** Run Claude Code from a directory where you have full read/write permissions (e.g., your project folder). On Windows, avoid running from restricted system directories.
 
 ### For local development
 
@@ -93,6 +106,27 @@ This will verify both your V1 and V2 API credentials and show your account balan
 
 > "Set up a webhook at https://myapp.com/sms-status to receive SMS delivery status and inbound messages"
 
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `/kudosity-sms:setup` | Interactive credential configuration — collects your API Key and Secret, saves them to your shell profile, and validates against both V1 and V2 APIs |
+
+## Skills
+
+| Skill | Description |
+|-------|-------------|
+| `send-sms` | Send SMS to a single recipient (V2 API) or to contact lists / multiple numbers (V1 API). Supports scheduling, link tracking, and delivery callbacks. |
+| `send-mms` | Send multimedia messages with images, GIFs, video, or audio attachments (V2 API). |
+| `create-list` | Create contact lists and add contacts for campaign sends (V1 API). |
+| `setup-webhook` | Configure webhooks for delivery status, inbound messages, MMS events, link hits, and opt-outs (V2 API). |
+
+## Agents
+
+| Agent | Description |
+|-------|-------------|
+| `kudosity-assistant` | A specialized messaging assistant that coordinates multi-step Kudosity operations. Understands API routing rules, authentication methods, and can chain multiple operations together. |
+
 ## API Coverage
 
 | Operation | API Version | Auth Method |
@@ -108,25 +142,42 @@ The full API specifications are available as OpenAPI documents:
 - **V1**: [`api_documentation.yml`](https://developers.kudosity.com/openapi/api_documentation.yml) — Lists, contacts, bulk SMS
 - **V2**: [`public-openapi.yaml`](https://developers.kudosity.com/openapi/public-openapi.yaml) — Single SMS, MMS, webhooks
 
-## Architecture
+## Architecture & Trust Boundaries
 
-This plugin connects to the public Kudosity MCP server at [`developers.kudosity.com/mcp`](https://developers.kudosity.com/mcp) for API documentation lookup. All API requests are made directly via `curl` using your locally stored credentials.
+This plugin has two distinct components with different trust boundaries:
 
-The MCP provides:
-- **Documentation tools** (`list-specs`, `list-endpoints`, `get-endpoint`, `search-endpoints`) — browse and search API endpoints
-- **Routing helper** (`route-kudosity-operations`) — determines which API version to use
+### MCP server (remote, read-only)
 
-API calls are made directly via `curl`:
+The plugin connects to the public Kudosity MCP server at [`developers.kudosity.com/mcp`](https://developers.kudosity.com/mcp). This server provides **API documentation and endpoint metadata only**. It does not execute API operations, receive message content, or have access to your credentials.
+
+MCP tools available:
+- `list-specs`, `list-endpoints`, `get-endpoint`, `search-endpoints` — browse and search API documentation
+- `route-kudosity-operations` — determines which API version to use for a given operation
+
+### API execution (local, authenticated)
+
+All actual API operations (sending messages, creating lists, configuring webhooks) are executed **locally by Claude Code** on your machine using `curl` commands. API calls go directly from your machine to the Kudosity API servers:
+
 - **V1 API** (`api.transmitsms.com`) — Basic Auth with `-u` flag
 - **V2 API** (`api.transmitmessage.com`) — `x-api-key` header
+
+Your credentials are never sent to the MCP server or to Claude. They are used only in direct API calls to Kudosity.
+
+## Security
+
+- **Credentials** are stored locally as environment variables in your shell configuration file (e.g. `~/.zshrc`). They are not embedded in any plugin file, sent to Claude, or transmitted to any remote service other than the Kudosity API during authenticated requests.
+- **API calls** are executed locally by Claude Code using `curl`. Requests go directly from your machine to the Kudosity API — they do not pass through the MCP server or any intermediary.
+- **MCP server** access is read-only — it serves API documentation and endpoint metadata only. No credentials, message content, or user data are sent to it.
+- **No telemetry or analytics** are collected by this plugin.
+- **Shared machine risk:** If you are on a shared machine, be aware that other users with access to your shell configuration file may be able to read your stored credentials. Consider your local machine security accordingly.
 
 ## Plugin Structure
 
 ```
 ├── .claude-plugin/
 │   ├── plugin.json              # Plugin manifest
-│   └── marketplace.json         # Marketplace catalog
-├── .mcp.json                    # MCP server connection
+│   └── marketplace.json         # Marketplace catalog entry
+├── .mcp.json                    # MCP server connection config
 ├── skills/
 │   ├── create-list/SKILL.md     # Contact list management
 │   ├── send-sms/SKILL.md        # SMS sending
@@ -136,6 +187,9 @@ API calls are made directly via `curl`:
 │   └── kudosity-assistant.md    # Specialized messaging agent
 ├── commands/
 │   └── setup.md                 # Credential setup wizard
+├── .gitignore
+├── CHANGELOG.md
+├── LICENSE
 └── README.md
 ```
 
@@ -149,4 +203,4 @@ API calls are made directly via `curl`:
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE)

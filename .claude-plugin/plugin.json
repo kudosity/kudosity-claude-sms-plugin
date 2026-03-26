@@ -1,7 +1,7 @@
 {
   "name": "kudosity-sms",
   "description": "Send SMS and MMS messages, manage contact lists, and configure webhooks using the Kudosity messaging platform.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Kudosity",
     "url": "https://kudosity.com"
